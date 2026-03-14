@@ -2,19 +2,37 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using static System.Net.WebRequestMethods;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace DWMBlurGlassUpdater
 {
+    /// <summary>
+    /// Provides methods to fetch release download URLs from the DWMBlurGlass GitHub repository.
+    /// </summary>
     public class Updater
     {
+        /// <summary>
+        /// Shared HttpClient instance used for GitHub API requests.
+        /// </summary>
         private static HttpClient http = new();
 
+        /// <summary>
+        /// GitHub API URL for all releases.
+        /// </summary>
         private static string releasesApiUrl = "https://api.github.com/repos/Maplespe/DWMBlurGlass/releases";
+
+        /// <summary>
+        /// GitHub API URL for the latest release.
+        /// </summary>
         private static string latestApiUrl => $"{releasesApiUrl}/latest";
 
+        /// <summary>
+        /// Searches the provided assets array for a Windows x64 build and returns its download URL.
+        /// </summary>
+        /// <param name="assets">A JArray containing release assets.</param>
+        /// <returns>The browser download URL of the first x64 asset found.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no suitable release asset is found.</exception>
         private static string GetWindowsBuildUrl(JArray assets)
         {
             for (int i = 0; i < assets.Count; i++)
@@ -27,6 +45,11 @@ namespace DWMBlurGlassUpdater
             throw new InvalidOperationException("No suitable release found.");
         }
 
+        /// <summary>
+        /// Gets the download URL for the latest stable Windows x64 release.
+        /// </summary>
+        /// <returns>A string containing the download URL.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the GitHub API response cannot be parsed or no suitable asset is found.</exception>
         public static async Task<string> GetLatestUrl()
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
@@ -47,6 +70,11 @@ namespace DWMBlurGlassUpdater
             }
         }
 
+        /// <summary>
+        /// Gets the download URL for the latest unstable (pre-release) Windows x64 release.
+        /// </summary>
+        /// <returns>A string containing the download URL.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the GitHub API response cannot be parsed or no suitable asset is found.</exception>
         public static async Task<string> GetLatestUnstableUrl()
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
@@ -67,6 +95,13 @@ namespace DWMBlurGlassUpdater
             }
         }
 
+        /// <summary>
+        /// Gets the download URL for a specific release version.
+        /// </summary>
+        /// <param name="version">The version string to search for (e.g., "v1.0.0").</param>
+        /// <param name="forceExact">If true, only exact matches are considered; if false, partial matches are allowed.</param>
+        /// <returns>The browser download URL of the first matching x64 asset.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no suitable release is found or the API response cannot be parsed.</exception>
         public static async Task<string> GetVersionUrl(string version, bool forceExact = false)
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
@@ -99,6 +134,13 @@ namespace DWMBlurGlassUpdater
                 throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
             }
         }
+
+        /// <summary>
+        /// Gets download URLs for all Windows x64 releases.
+        /// </summary>
+        /// <param name="includeUnstable">If true, pre-release versions are included; otherwise, only stable releases are returned.</param>
+        /// <returns>A list of strings containing browser download URLs for all matching assets.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the GitHub API response cannot be parsed.</exception>
         public static async Task<List<string>> GetVersionsUrls(bool includeUnstable = false)
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
