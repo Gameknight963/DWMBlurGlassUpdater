@@ -19,15 +19,12 @@ namespace DWMBlurGlassUpdater
         public static async Task<string> GetLatestUrl()
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
-            string resp;
-            JObject obj;
-            JArray assets;
 
             try
             {
-                resp = await http.GetStringAsync(latestApiUrl);
-                obj = JObject.Parse(resp);
-                assets = (JArray)obj["assets"]!;
+                string resp = await http.GetStringAsync(latestApiUrl);
+                JObject obj = JObject.Parse(resp);
+                JArray assets = (JArray)obj["assets"]!;
                 for (int i = 0; i < assets.Count; i++)
                 {
                     if (((string)assets[i]["name"]!).Contains("x64"))
@@ -48,15 +45,12 @@ namespace DWMBlurGlassUpdater
         public static async Task<string> GetLatestUnstableUrl()
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
-            string resp;
-            JArray obj;
-            JArray assets;
 
             try
             {
-                resp = await http.GetStringAsync(releasesApiUrl);
-                obj = JArray.Parse(resp);
-                assets = (JArray)obj[0]!["assets"]!;
+                string resp = await http.GetStringAsync(latestApiUrl);
+                JObject obj = JObject.Parse(resp);
+                JArray assets = (JArray)obj["assets"]!;
                 for (int i = 0; i < assets.Count; i++)
                 {
                     if (((string)assets[i]["name"]!).Contains("x64"))
