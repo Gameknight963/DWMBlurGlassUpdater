@@ -44,5 +44,34 @@ namespace DWMBlurGlassUpdater
                 throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
             }
         }
+
+        public static async Task<string> GetLatestUnstableUrl()
+        {
+            http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
+            string resp;
+            JArray obj;
+            JArray assets;
+
+            try
+            {
+                resp = await http.GetStringAsync(releasesApiUrl);
+                obj = JArray.Parse(resp);
+                assets = (JArray)obj[0]!["assets"]!;
+                for (int i = 0; i < assets.Count; i++)
+                {
+                    if (((string)assets[i]["name"]!).Contains("x64"))
+                    {
+                        return (string)assets[i]["browser_download_url"]!;
+                    }
+                }
+                throw new InvalidOperationException("Download error: No suitable release found.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception getting or parsing: {ex.GetType().Name}, {ex.Message}");
+                Console.ReadLine();
+                throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
+            }
+        }
     }
 }
