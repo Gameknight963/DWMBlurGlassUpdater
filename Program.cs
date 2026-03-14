@@ -7,8 +7,8 @@ namespace DWMBlurGlassUpdater
     {
         static async Task<int> Main()
         {
-            string latest = await Updater.GetLatestUnstableUrl();
-            Console.WriteLine(latest);
+            Console.WriteLine(await Updater.GetLatestUnstableUrl());
+            Console.WriteLine(await Updater.GetVersionUrl("2.3.2"));
             Console.ReadLine();
             return 0;
         }
