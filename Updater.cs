@@ -99,5 +99,40 @@ namespace DWMBlurGlassUpdater
                 throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
             }
         }
+        public static async Task<List<string>> GetVersionsUrls(bool includeUnstable = false)
+        {
+            http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
+            List<string> versionUrls = new List<string>();
+
+            try
+            {
+                string resp = await http.GetStringAsync(releasesApiUrl);
+                JArray releases = JArray.Parse(resp);
+
+                for (int i = 0; i < releases.Count; i++)
+                {
+                    JObject release = (JObject)releases[i];
+
+                    bool isPreRelease = (bool)release["prerelease"]!;
+                    if (!includeUnstable && isPreRelease) continue;
+
+                    JArray assets = (JArray)release["assets"]!;
+                    foreach (JObject asset in assets)
+                    {
+                        string url = (string)asset["browser_download_url"]!;
+                        versionUrls.Add(url);
+                    }
+                }
+
+                return versionUrls;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception getting releases: {ex.GetType().Name}, {ex.Message}\n" +
+                    $"Press Enter to see full exception...");
+                Console.ReadLine();
+                throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
+            }
+        }
     }
 }

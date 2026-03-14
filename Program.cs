@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Collections.Generic;
 
 namespace DWMBlurGlassUpdater
 {
@@ -8,7 +9,9 @@ namespace DWMBlurGlassUpdater
         static async Task<int> Main()
         {
             Console.WriteLine(await Updater.GetLatestUnstableUrl());
-            Console.WriteLine(await Updater.GetVersionUrl("2.3.2"));
+
+            List<string> versions = await Updater.GetVersionsUrls();
+            foreach (string v in versions) Console.WriteLine(v);
             Console.ReadLine();
             return 0;
         }
