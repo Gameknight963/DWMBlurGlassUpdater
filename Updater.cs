@@ -271,8 +271,12 @@ namespace DWMBlurGlassUpdater
                         continue;
 
                     string relativePath = entry.FullName.Substring(folderInZip.Length + 1);
-                    string tempPath = Path.Combine(tempDir, relativePath);
+                    string fileName = Path.GetFileName(relativePath);
 
+                    if (Array.Exists(skipFiles, s => string.Equals(s, fileName, StringComparison.OrdinalIgnoreCase)))
+                        continue;
+
+                    string tempPath = Path.Combine(tempDir, relativePath);
                     if (string.IsNullOrEmpty(entry.Name))
                         continue;
 
