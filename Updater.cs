@@ -242,7 +242,7 @@ namespace DWMBlurGlassUpdater
         {
             try
             {
-                using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+                using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
                 {
                     // If we get here, the file is not locked
                     return false;
