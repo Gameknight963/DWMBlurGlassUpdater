@@ -142,11 +142,6 @@ namespace DWMBlurGlassUpdater
             Console.WriteLine("  --silent                 Suppress output messages (implies --no-pause)");
             Console.WriteLine("  --hard                   Fully delete the previous installation");
             Console.WriteLine();
-            Console.WriteLine("Examples:");
-            Console.WriteLine("  updater.exe install latest");
-            Console.WriteLine("  updater.exe install 2.3.1 --no-pause");
-            Console.WriteLine("  updater.exe check --silent");
-            Console.WriteLine();
         }
 
 
