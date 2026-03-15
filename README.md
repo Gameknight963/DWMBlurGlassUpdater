@@ -6,7 +6,7 @@ I was tired of updating [DWMBlurGlass](https://github.com/Maplespe/DWMBlurGlass)
 
 ### Usage
 
- - Download the latest version from Github Releases.
+ - Download the latest version from [Github Releases](https://github.com/Gameknight963/DWMBlurGlassUpdater/releases/latest).
 
  - Place the contents of the zip you downloaded one directory above your DWMBlurGlassFolder (which should be named 'Release')
 
