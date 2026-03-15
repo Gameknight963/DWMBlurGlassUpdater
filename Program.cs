@@ -121,8 +121,29 @@ namespace DWMBlurGlassUpdater
 
         static void PrintHelp()
         {
-            Console.WriteLine("todo: add help");
+            Console.WriteLine();
+            Console.WriteLine("Usage:");
+            Console.WriteLine("  \\.DWMBlurGlassUpdater.exe [command] [options]");
+            Console.WriteLine();
+            Console.WriteLine("Commands:");
+            Console.WriteLine("  install latest           Install the latest stable release");
+            Console.WriteLine("  install unstable         Install the latest unstable (pre-release) version");
+            Console.WriteLine("  install <version>        Install a specific version, e.g. 2.3.1");
+            Console.WriteLine("  check                    Print the latest version tag from GitHub");
+            Console.WriteLine("  --help, -h, /?           Show this help message");
+            Console.WriteLine("  --version, -v, /v        Print updater version");
+            Console.WriteLine();
+            Console.WriteLine("Flags:");
+            Console.WriteLine("  --no-pause               Do not wait for Enter after completion");
+            Console.WriteLine("  --silent                 Suppress output messages (implies --no-pause)");
+            Console.WriteLine();
+            Console.WriteLine("Examples:");
+            Console.WriteLine("  updater.exe install latest");
+            Console.WriteLine("  updater.exe install 2.3.1 --no-pause");
+            Console.WriteLine("  updater.exe check --silent");
+            Console.WriteLine();
         }
+
 
         static void PrintVersion()
         {
