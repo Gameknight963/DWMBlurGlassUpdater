@@ -1,9 +1,6 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json.Linq;
+using System.IO;
+using System.IO.Compression;
 
 namespace DWMBlurGlassUpdater
 {
@@ -175,6 +172,102 @@ namespace DWMBlurGlassUpdater
                 Console.ReadLine();
                 throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
             }
+        }
+
+        private static async Task DownloadZip(string url, string outputFile)
+        {
+            http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
+
+            byte[] data = await http.GetByteArrayAsync(url);
+            await File.WriteAllBytesAsync(outputFile, data);
+        }
+
+        private static async Task InstallZip(string zipPath, string targetDir, string[]? skipFiles = null)
+        {
+            string folderInZip = "Release";
+
+            skipFiles ??= Array.Empty<string>();
+
+            string tempDir = Path.Combine(Path.GetTempPath(), "DWMBlurGlassUpdater");
+
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+            Directory.CreateDirectory(tempDir);
+
+            using (ZipArchive archive = ZipFile.OpenRead(zipPath))
+            {
+                foreach (var entry in archive.Entries)
+                {
+                    if (!entry.FullName.StartsWith(folderInZip + "/", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    string relativePath = entry.FullName.Substring(folderInZip.Length + 1);
+                    string tempPath = Path.Combine(tempDir, relativePath);
+
+                    if (string.IsNullOrEmpty(entry.Name))
+                        continue;
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(tempPath)!);
+                    entry.ExtractToFile(tempPath, true);
+                }
+            }
+
+            foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
+            {
+                string relativePath = Path.GetRelativePath(tempDir, file);
+                if (Array.Exists(skipFiles, s => string.Equals(s, relativePath, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                string destPath = Path.Combine(targetDir, relativePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+                File.Copy(file, destPath, true);
+            }
+
+            Directory.Delete(tempDir, true);
+        }
+
+        public static async Task<bool> InstallFromUrl(string url)
+        {
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string destinationDir = Path.Combine(baseDir, "Release");
+            if (Directory.Exists(destinationDir) && IsDirectoryLocked(destinationDir)) return false;
+            Directory.CreateDirectory(destinationDir);
+
+            string zipPath = Path.Combine(baseDir, "DWMBlurGlass.zip");
+            await DownloadZip(url, zipPath);
+            await InstallZip(zipPath, destinationDir);
+            return true;
+        }
+
+        private static bool IsFileLocked(string path)
+        {
+            try
+            {
+                using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+                {
+                    // If we get here, the file is not locked
+                    return false;
+                }
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"IO lock: {path} ({ex.HResult})");
+                return true; // file is locked
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine($"Access issue: {path} ({ex.HResult})");
+                return true; // file might be read-only
+            }
+        }
+
+        private static bool IsDirectoryLocked(string directoryPath, bool recursive = true)
+        {
+            if (!Directory.Exists(directoryPath))
+                throw new DirectoryNotFoundException(directoryPath);
+
+            string[] files = Directory.GetFiles(directoryPath, "*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+
+            return files.Any(IsFileLocked);
         }
     }
 }
