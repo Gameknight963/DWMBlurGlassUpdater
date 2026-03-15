@@ -250,8 +250,10 @@ namespace DWMBlurGlassUpdater
         /// Optional list of relative file paths that should not be overwritten during installation.
         /// </param>
         /// <returns>A task representing the installation process.</returns>
-        private static async Task InstallZip(string zipPath, string targetDir, string[]? skipFiles = null)
+        private static async Task<bool> InstallZip(string zipPath, string targetDir, string[]? skipFiles = null)
         {
+            if (IsDirectoryLocked(targetDir)) return false;
+
             string folderInZip = "Release";
 
             skipFiles ??= Array.Empty<string>();
@@ -291,6 +293,7 @@ namespace DWMBlurGlassUpdater
             }
 
             Directory.Delete(tempDir, true);
+            return true;
         }
 
         /// <summary>
@@ -312,8 +315,7 @@ namespace DWMBlurGlassUpdater
 
             string zipPath = Path.Combine(baseDir, "DWMBlurGlass.zip");
             await DownloadZip(url, zipPath);
-            await InstallZip(zipPath, destinationDir);
-            return true;
+            return await InstallZip(zipPath, destinationDir, ["config.ini"]);
         }
 
         /// <summary>
@@ -327,7 +329,7 @@ namespace DWMBlurGlassUpdater
         {
             try
             {
-                using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+                using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
                     return false;
                 }

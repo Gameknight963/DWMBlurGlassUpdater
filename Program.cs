@@ -84,7 +84,8 @@ namespace DWMBlurGlassUpdater
             bool success = await Updater.InstallFromUrl(url);
             if (!success)
             {
-                Console.WriteLine("Destination directory is locked. Make sure to press uninstall in DWMBlurGlassGUI first");
+                Console.WriteLine("Destination directory is locked. Make sure uninstall in DWMBlurGlass first.");
+                Console.WriteLine("If the issue persists, restart dwm.exe");
                 EnterToContinue();
                 return 3;
             }
