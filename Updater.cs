@@ -5,31 +5,36 @@ using System.IO.Compression;
 namespace DWMBlurGlassUpdater
 {
     /// <summary>
-    /// Provides methods to fetch release download URLs from the DWMBlurGlass GitHub repository.
+    /// Provides functionality for retrieving releases of DWMBlurGlass from GitHub
+    /// and installing them locally.
     /// </summary>
     public class Updater
     {
         /// <summary>
-        /// Shared HttpClient instance used for GitHub API requests.
+        /// Shared <see cref="HttpClient"/> instance used for all GitHub API requests.
         /// </summary>
         private static HttpClient http = new();
 
         /// <summary>
-        /// GitHub API URL for all releases.
+        /// GitHub API endpoint that returns all releases for the DWMBlurGlass repository.
         /// </summary>
         private static string releasesApiUrl = "https://api.github.com/repos/Maplespe/DWMBlurGlass/releases";
 
         /// <summary>
-        /// GitHub API URL for the latest release.
+        /// GitHub API endpoint that returns the latest stable release.
         /// </summary>
         private static string latestApiUrl => $"{releasesApiUrl}/latest";
 
         /// <summary>
-        /// Searches the provided assets array for a Windows x64 build and returns its download URL.
+        /// Searches a GitHub release asset list for a Windows x64 build and returns its download URL.
         /// </summary>
-        /// <param name="assets">A JArray containing release assets.</param>
-        /// <returns>The browser download URL of the first x64 asset found.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if no suitable release asset is found.</exception>
+        /// <param name="assets">The JSON array containing release assets from the GitHub API.</param>
+        /// <returns>
+        /// The <c>browser_download_url</c> of the first asset whose name contains <c>x64</c>.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if no Windows x64 asset can be found in the release.
+        /// </exception>
         private static string GetWindowsBuildUrl(JArray assets)
         {
             for (int i = 0; i < assets.Count; i++)
@@ -43,10 +48,14 @@ namespace DWMBlurGlassUpdater
         }
 
         /// <summary>
-        /// Gets the download URL for the latest stable Windows x64 release.
+        /// Retrieves the download URL of the latest stable Windows x64 release.
         /// </summary>
-        /// <returns>A string containing the download URL.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the GitHub API response cannot be parsed or no suitable asset is found.</exception>
+        /// <returns>
+        /// A task that resolves to the download URL for the latest stable build.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the GitHub API response cannot be parsed or if no matching asset exists.
+        /// </exception>
         public static async Task<string> GetLatestUrl()
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
@@ -68,10 +77,18 @@ namespace DWMBlurGlassUpdater
         }
 
         /// <summary>
-        /// Gets the download URL for the latest unstable (pre-release) Windows x64 release.
+        /// Retrieves the download URL of the latest unstable (pre-release) Windows x64 build.
         /// </summary>
-        /// <returns>A string containing the download URL.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the GitHub API response cannot be parsed or no suitable asset is found.</exception>
+        /// <remarks>
+        /// This currently queries the same endpoint as <see cref="GetLatestUrl"/>,
+        /// so behavior may depend on how the GitHub repository marks pre-releases.
+        /// </remarks>
+        /// <returns>
+        /// A task resolving to the download URL of the latest unstable build.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the GitHub API response cannot be parsed or no suitable asset exists.
+        /// </exception>
         public static async Task<string> GetLatestUnstableUrl()
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
@@ -93,12 +110,21 @@ namespace DWMBlurGlassUpdater
         }
 
         /// <summary>
-        /// Gets the download URL for a specific release version.
+        /// Retrieves the download URL of a specific version of DWMBlurGlass.
         /// </summary>
-        /// <param name="version">The version string to search for (e.g., "v1.0.0").</param>
-        /// <param name="forceExact">If true, only exact matches are considered; if false, partial matches are allowed.</param>
-        /// <returns>The browser download URL of the first matching x64 asset.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if no suitable release is found or the API response cannot be parsed.</exception>
+        /// <param name="version">
+        /// Version string to search for (for example <c>v2.0</c>).
+        /// </param>
+        /// <param name="forceExact">
+        /// If <c>true</c>, the tag name must match exactly.
+        /// If <c>false</c>, partial matches are allowed.
+        /// </param>
+        /// <returns>
+        /// A task resolving to the download URL of the matching Windows x64 build.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if no matching release is found or the GitHub API response cannot be parsed.
+        /// </exception>
         public static async Task<string> GetVersionUrl(string version, bool forceExact = false)
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
@@ -133,11 +159,17 @@ namespace DWMBlurGlassUpdater
         }
 
         /// <summary>
-        /// Gets download URLs for all Windows x64 releases.
+        /// Retrieves download URLs for all Windows x64 builds available in the repository.
         /// </summary>
-        /// <param name="includeUnstable">If true, pre-release versions are included; otherwise, only stable releases are returned.</param>
-        /// <returns>A list of strings containing browser download URLs for all matching assets.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the GitHub API response cannot be parsed.</exception>
+        /// <param name="includeUnstable">
+        /// If <c>true</c>, pre-release versions are included in the results.
+        /// </param>
+        /// <returns>
+        /// A list of download URLs for all matching assets.
+        /// </returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the GitHub API response cannot be parsed.
+        /// </exception>
         public static async Task<List<string>> GetVersionsUrls(bool includeUnstable = false)
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
@@ -174,6 +206,12 @@ namespace DWMBlurGlassUpdater
             }
         }
 
+        /// <summary>
+        /// Downloads a ZIP archive from the specified URL to a local file.
+        /// </summary>
+        /// <param name="url">The download URL of the ZIP archive.</param>
+        /// <param name="outputFile">The path where the downloaded file will be saved.</param>
+        /// <returns>A task representing the asynchronous download operation.</returns>
         private static async Task DownloadZip(string url, string outputFile)
         {
             http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
@@ -182,6 +220,15 @@ namespace DWMBlurGlassUpdater
             await File.WriteAllBytesAsync(outputFile, data);
         }
 
+        /// <summary>
+        /// Extracts a release ZIP archive and installs its contents into the target directory.
+        /// </summary>
+        /// <param name="zipPath">Path to the downloaded ZIP archive.</param>
+        /// <param name="targetDir">Directory where the files should be installed.</param>
+        /// <param name="skipFiles">
+        /// Optional list of relative file paths that should not be overwritten during installation.
+        /// </param>
+        /// <returns>A task representing the installation process.</returns>
         private static async Task InstallZip(string zipPath, string targetDir, string[]? skipFiles = null)
         {
             string folderInZip = "Release";
@@ -225,11 +272,21 @@ namespace DWMBlurGlassUpdater
             Directory.Delete(tempDir, true);
         }
 
+        /// <summary>
+        /// Downloads and installs a DWMBlurGlass release from the specified URL.
+        /// </summary>
+        /// <param name="url">The download URL of the release ZIP file.</param>
+        /// <returns>
+        /// <c>true</c> if installation succeeded; <c>false</c> if the destination directory is locked.
+        /// </returns>
         public static async Task<bool> InstallFromUrl(string url)
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string destinationDir = Path.Combine(baseDir, "Release");
-            if (Directory.Exists(destinationDir) && IsDirectoryLocked(destinationDir)) return false;
+
+            if (Directory.Exists(destinationDir) && IsDirectoryLocked(destinationDir))
+                return false;
+
             Directory.CreateDirectory(destinationDir);
 
             string zipPath = Path.Combine(baseDir, "DWMBlurGlass.zip");
@@ -238,34 +295,51 @@ namespace DWMBlurGlassUpdater
             return true;
         }
 
+        /// <summary>
+        /// Determines whether a file is locked by another process.
+        /// </summary>
+        /// <param name="path">Path to the file being checked.</param>
+        /// <returns>
+        /// <c>true</c> if the file cannot be opened exclusively; otherwise <c>false</c>.
+        /// </returns>
         private static bool IsFileLocked(string path)
         {
             try
             {
-                using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+                using FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
                 {
-                    // If we get here, the file is not locked
                     return false;
                 }
             }
             catch (IOException ex)
             {
                 Console.WriteLine($"IO lock: {path} ({ex.HResult})");
-                return true; // file is locked
+                return true;
             }
             catch (UnauthorizedAccessException ex)
             {
                 Console.WriteLine($"Access issue: {path} ({ex.HResult})");
-                return true; // file might be read-only
+                return true;
             }
         }
 
+        /// <summary>
+        /// Determines whether any file inside a directory is locked.
+        /// </summary>
+        /// <param name="directoryPath">The directory to check.</param>
+        /// <param name="recursive">
+        /// If <c>true</c>, subdirectories will also be scanned.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if any file in the directory is locked; otherwise <c>false</c>.
+        /// </returns>
         private static bool IsDirectoryLocked(string directoryPath, bool recursive = true)
         {
             if (!Directory.Exists(directoryPath))
                 throw new DirectoryNotFoundException(directoryPath);
 
-            string[] files = Directory.GetFiles(directoryPath, "*", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+            string[] files = Directory.GetFiles(directoryPath, "*",
+                recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 
             return files.Any(IsFileLocked);
         }
