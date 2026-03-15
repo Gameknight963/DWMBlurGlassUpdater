@@ -69,9 +69,39 @@ namespace DWMBlurGlassUpdater
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception getting or parsing: {ex.GetType().Name}, {ex.Message}\n" +
-                    $"Press enter for full exception...");
-                Console.ReadLine();
+                Program.ShowException(ex, "Exception getting or parsing", "Press enter for full exception...");
+                throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
+            }
+        }
+
+        /// <summary>
+        /// Retries the tag name of the latest release.
+        /// </summary>
+        /// <param name="unstable">If true returns the latest unstable tag instead of
+        /// latest stable tag. False by default.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public static async Task<string> GetLatestTag(bool unstable = false)
+        {
+            http.DefaultRequestHeaders.Add("User-Agent", "DWMBlurGlassUpdater");
+            try
+            {
+                if (unstable)
+                {
+                    string resp = await http.GetStringAsync(releasesApiUrl);
+                    JArray obj = JArray.Parse(resp);
+                    return (string)obj[0]["tag_name"]!;
+                }
+                else
+                {
+                    string resp = await http.GetStringAsync(latestApiUrl);
+                    JObject ar = JObject.Parse(resp);
+                    return (string)(ar)["tag_name"]!;
+                }
+            }
+            catch (Exception ex)
+            {
+                Program.ShowException(ex, "Exception getting or parsing", "Press enter for full exception...");
                 throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
             }
         }
@@ -79,10 +109,6 @@ namespace DWMBlurGlassUpdater
         /// <summary>
         /// Retrieves the download URL of the latest unstable (pre-release) Windows x64 build.
         /// </summary>
-        /// <remarks>
-        /// This currently queries the same endpoint as <see cref="GetLatestUrl"/>,
-        /// so behavior may depend on how the GitHub repository marks pre-releases.
-        /// </remarks>
         /// <returns>
         /// A task resolving to the download URL of the latest unstable build.
         /// </returns>
@@ -95,16 +121,14 @@ namespace DWMBlurGlassUpdater
 
             try
             {
-                string resp = await http.GetStringAsync(latestApiUrl);
-                JObject obj = JObject.Parse(resp);
-                JArray assets = (JArray)obj["assets"]!;
+                string resp = await http.GetStringAsync(releasesApiUrl);
+                JArray obj = JArray.Parse(resp);
+                JArray assets = (JArray)obj[0]["assets"]!;
                 return GetWindowsBuildUrl(assets);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception getting or parsing: {ex.GetType().Name}, {ex.Message}\n" +
-                    $"Press enter for full exception...");
-                Console.ReadLine();
+                Program.ShowException(ex, "Exception getting or parsing", "Press enter for full exception...");
                 throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
             }
         }
@@ -151,9 +175,8 @@ namespace DWMBlurGlassUpdater
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception getting version {version}: {ex.GetType().Name}, {ex.Message}\n" +
-                    $"Press enter for full exception...");
-                Console.ReadLine();
+                Program.ShowException(ex, $"Exception getting version {version}: {ex.GetType().Name}, {ex.Message}", 
+                    "Press enter for full exception...");
                 throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
             }
         }
@@ -199,9 +222,7 @@ namespace DWMBlurGlassUpdater
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception getting releases: {ex.GetType().Name}, {ex.Message}\n" +
-                    $"Press Enter to see full exception...");
-                Console.ReadLine();
+                Program.ShowException(ex, "Exception getting releases");
                 throw new InvalidOperationException($"Exception parsing releases API: \n{ex}");
             }
         }
@@ -313,12 +334,12 @@ namespace DWMBlurGlassUpdater
             }
             catch (IOException ex)
             {
-                Console.WriteLine($"IO lock: {path} ({ex.HResult})");
+                if (!Program.silent) Console.WriteLine($"IO lock: {path} ({ex.HResult})");
                 return true;
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.WriteLine($"Access issue: {path} ({ex.HResult})");
+                if (!Program.silent) Console.WriteLine($"Access issue: {path} ({ex.HResult})");
                 return true;
             }
         }
