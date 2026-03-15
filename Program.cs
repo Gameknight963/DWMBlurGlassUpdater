@@ -9,14 +9,10 @@ namespace DWMBlurGlassUpdater
     {
         public static bool noPause = false;
         public static bool silent = false;
+        public static bool hardInstall = false;
 
         static async Task<int> Main(string[] args)
         {
-            if (args.Length == 0)
-            {
-                return await InstallLatest();
-            }
-
             List<string> positionalArgs = new List<string>();
 
             for (int i = 0; i < args.Length; i++)
@@ -31,10 +27,17 @@ namespace DWMBlurGlassUpdater
                         silent = true;
                         noPause = true;
                         break;
+                    case "--hard":
+                        hardInstall = true;
+                        break;
                     default:
                         positionalArgs.Add(args[i]);
                         break;
                 }
+            }
+            if (positionalArgs.Count == 0)
+            {
+                return await InstallLatest();
             }
 
             string command = positionalArgs[0].ToLower();
@@ -137,6 +140,7 @@ namespace DWMBlurGlassUpdater
             Console.WriteLine("Flags:");
             Console.WriteLine("  --no-pause               Do not wait for Enter after completion");
             Console.WriteLine("  --silent                 Suppress output messages (implies --no-pause)");
+            Console.WriteLine("  --hard                   Fully delete the previous installation");
             Console.WriteLine();
             Console.WriteLine("Examples:");
             Console.WriteLine("  updater.exe install latest");

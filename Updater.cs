@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System.ComponentModel;
 using System.IO;
 using System.IO.Compression;
 
@@ -314,7 +315,8 @@ namespace DWMBlurGlassUpdater
 
             if (Directory.Exists(destinationDir) && IsDirectoryLocked(destinationDir))
                 return false;
-
+            if (Program.hardInstall && Directory.Exists(destinationDir))
+                Directory.Delete(destinationDir, true);
             Directory.CreateDirectory(destinationDir);
 
             string zipPath = Path.Combine(baseDir, "DWMBlurGlass.zip");
