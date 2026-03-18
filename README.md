@@ -17,7 +17,7 @@ I was tired of updating [DWMBlurGlass](https://github.com/Maplespe/DWMBlurGlass)
 Commands:
 
 - ``install latest``: Install the latest stable release
-- ``install unstable`: Install the latest unstable (pre-release) version
+- ``install unstable``: Install the latest unstable (pre-release) version
 - ``install <version>`` Install a specific version, e.g. 2.3.1
 - ``check`` Print the latest version tag from GitHub
 - ``--help, -h, /?``: Show help message
